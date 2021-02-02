@@ -1,0 +1,218 @@
+#https://dev.to/heroku/how-to-deploy-your-app-to-heroku-from-raspberry-pi-162k
+#https://medium.com/@dushan14/create-a-web-application-with-python-flask-postgresql-and-deploy-on-heroku-243d548335cc
+#https://www.youtube.com/watch?v=FKy21FnjKS0&list=RDCMUC-QDfvrRIDB6F0bIO4I4HkQ&start_radio=1&t=140
+#Some notes:
+
+#Run app.py file without sudo and outseide of env
+#Run python3 manage.py db init without sudo and withour env
+
+
+
+sudo curl https://cli-assets.heroku.com/install.sh | sh
+
+heroku login -i # input credentials without browser
+
+heroku apps:create sensors2raspi #We just tell heroku to locally cerate aan app named sensors2raspi
+
+
+
+###################
+##Heroku + postgres
+####################
+##Alwasy install with sudo in env:
+sudo pip3 install flask_sqlalchemy
+
+
+cd pythonAnywhere
+
+virtualenv env
+
+source env/bin/activate
+
+sudo apt-get install postgresql postgresql-contrib
+
+sudo -u postgres createuser --superuser yogi
+
+sudo -u yogi createdb TemaccessToRemoteRp2
+
+export APP_SETTINGS="config.DevelopmentConfig"
+
+export DATABASE_URL="postgresql://yogi:bittoo@localhost:5432/TemaccessToRemoteRp2"
+
+###Grant persmiion for db by yogi"
+
+sudo su - postgres
+
+psql
+
+#Now I am in console of Postgres
+
+CREATE ROLE yogi WITH LOGIN PASSWORD 'bittoo';
+
+ALTER USER yogi PASSWORD 'bittoo';
+
+CREATE DATABASE TemaccessToRemoteRp2;
+#Created
+
+GRANT ALL PRIVILEGES ON DATABASE TemaccessToRemoteRp2 TO yogi;
+#Grant
+
+exit
+
+
+# to see teh table:
+psql -U yogi -d TemaccessToRemoteRp2;
+
+# in console:
+#dt stands for describe table 
+\dt
+
+# migrate the app it will create a directory "migrations" in cwd
+python3 manage.py db init
+
+#migrate teh changes
+python3 manage.py db migrate
+
+#It will show that a table is visible now:
+
+<<<<
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.autogenerate.compare] Detected added table 'sensors'
+  Generating /home/yogi/TemperatureDB/dhtWebServer/dhtWebHist/pythonAnyWhere/migrations/versions/321f2c6cad8c_.py ...  done
+>>>>>>
+
+# Now upgrade the chnages to actually update the table description in postgres:
+python3 manage.py db upgrade
+
+#to see the changes (addtion of new table called sensors)do:
+psql -U yogi -d TemaccessToRemoteRp2;
+
+\dt
+
+# it will show :
+
+<<<<
+            List of relations
+ Schema |  	    Name       | Type  | Owner 
+--------+-----------------+-------+-------
+ public | alembic_version | table | yogi
+ public | sensors         | table | yogi
+(2 rows)
+
+
+>>>>
+
+#To see the table sensors:
+
+\d sensors
+
+#to see teh data populated in postgres:
+
+SELECT * FROM sensors;
+
+#to exit from psql console:
+
+\q
+
+
+##To see teh number of rows:
+EXPLAIN SELECT * FROM sensors;
+
+##################################################################################################
+##Enabling Postgres on Rp2. I will need to get the data in Rp1 from RP2 so I need remote access from Rp1
+###################################################################################################
+
+#https://medium.com/@rimsovankiry/enable-remote-access-to-postgresql-ccb6c5199a47
+
+#ssh to RP1
+
+nano /var/lib/pgsql/data/postgresql.conf
+# In other RP address was </etc/postgresql/11/main>
+
+#add this in the end :
+listen_addresses = '*'
+
+nano /var/lib/pgsql/data/pg_hba.conf
+
+host    all      all              0.0.0.0/0                    md5
+host    all      all              ::/0                         md5
+#Comment out the corrospoding host all 127.0.0.1 line
+
+#Restart
+
+systemctl restart postgresql.service
+
+#Now 1 and bittoo as password
+
+
+#Connect via:
+
+psql  -h 10.208.8.121 -d flow -U yogi
+
+
+#######################################################################
+###sqlAlchemy databse binds for using two or more distributed databases
+#######################################################################
+
+
+SQLALCHEMY_DATABASE_URI = "postgresql://yogi:bittoo@localhost:5432/TemaccessToRemoteRp2"
+SQLALCHEMY_BINDS = {
+    'flow':     "postgresql://yogi:bittoo@10.208.8.121:5432/flow"
+}
+
+#to check the databse tables on heroku
+heroku pg:info --app raspi-flask
+################################
+###Problem now
+################################
+http://blog.sahildiwan.com/posts/flask-and-postgresql-app-deployed-on-heroku/
+make a new script to populate flow database locally from remote connection.
+then get data from locally Db in teh main script to post on to the html in app.py
+
+Now delete the databse creation from app.py within and just extract the data from sensors table as imported in app.py
+# To run python console 
+heroku run python3 --app raspi-flask
+from app import db
+db.create_all()
+exit()
+
+
+#######
+#To know git repos currently available to be pushed eg: heroku, prod, origin (git hub)
+##
+
+git remote -v
+git push origin main
+
+
+
+
+#########
+#DAtabase workaround
+##########
+# Designating second databse which is same in the local machine, but populated with more rows. table etc are same
+heroku addons:create heroku-postgresql:hobby-dev --app raspi-flask
+
+#Created postgresql-reticulated-99124 as HEROKU_POSTGRESQL_PURPLE_URL
+#To check the databases and configuration:
+heroku config --app raspi-flask
+
+<<<<
+APP_SETTINGS:                 config.DevelopmentConfig
+DATABASE_URL:                 postgres://ldkdharjdkjjuz:b2bd07921d5afc0915e405a01ce2a886fd0abd9fe99918656a8e6057e20b430c@ec2-174-129-199-54.compute-1.amazonaws.com:5432/d1n2ko9rjfieq0
+HEROKU_POSTGRESQL_PURPLE_URL: postgres://mdzwwjrcmeduwi:f170d753f9f3de1171da9a3d72f691b1a01295ac763f4e716c8a034d62e89d0b@ec2-34-202-65-210.compute-1.amazonaws.com:5432/dff1ggqs4l0ee5
+>>>>
+
+#so there are two database with different color
+#To push into new color db:
+heroku pg:push TemaccessToRemoteRp2  HEROKU_POSTGRESQL_PURPLE_URL --app raspi-flask
+
+#Promote this db_URL for app to use:
+heroku pg:promote HEROKU_POSTGRESQL_PURPLE_URL
+
+heroku restart --app raspi-flask
+
+#Database disruption: limit exceeded: 17000, allowed limit is 10000
+
+

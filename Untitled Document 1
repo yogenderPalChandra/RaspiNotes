@@ -1,0 +1,19 @@
+python manage.py runserver
+
+
+heroku run python3 --app raspi-flask
+
+>>from app import db
+>>db.create_all
+
+
+#heroku rake db:migrate --app raspi-flask
+
+
+heroku pg:psql --app raspi-flask
+
+
+heroku pg:push TemaccessToRemoteRp2  DATABASE_URL --app raspi-flask
+
+#Importat from time to time to do
+heroku restart

@@ -1,0 +1,747 @@
+Raspi notes:
+
+#Do Fat32 partition of SD card above than 32GBs
+#https://www.raspberrypi.org/documentation/installation/sdxc_formatting.md
+#tomshardware.com/reviews/raspberry-pi-headless-setup-how-to,6028.html
+#https://howtoraspberrypi.com/connect-wifi-raspberry-pi-3-others/
+#https://howtoraspberrypi.com/how-to-raspberry-pi-headless-setup/
+#http://qdosmsq.dunbar-it.co.uk/blog/2013/06/noobs-for-raspberry-pi/
+#Since cards above then 32 gbs should be FAT32 formated I have 64 GBs of card I will re formate it.
+#plug it in the ubuntu computer and do:
+
+#sudo fdisk -l
+
+#it will show:
+
+<<<<<<<<<
+#...
+#...
+#Disk /dev/mmcblk0: 7948 MB, 7948206080 bytes
+# heads, 16 sectors/track, 242560 cylinders, total 15523840 sectors
+#Units = sectors of 1 * 512 = 512 bytes
+#Sector size (logical/physical): 512 bytes / 512 bytes
+#I/O size (minimum/optimal): 512 bytes / 512 bytes
+#Disk identifier: 0x000dbfc6
+
+#       Device Boot      Start         End      Blocks   Id  System
+#/dev/mmcblk0p1            8192      122879       57344    c  xSomething (LBA)
+#/dev/mmcblk0p2          122880    15523839     7700480   83  Linux
+
+
+>>>>>>
+
+
+
+#Now this is Xsomething and Linux in teh system columns of partitions, we will delete these particition:
+
+sudo fdisk /dev/mmcblk0
+
+#Be sure that this </dev/mmcblk0> is the sd card mount disk otherwise everything will be deleted from the original working partitions of teh disk. 
+
+#We will enter in teh command line <<
+
+#enter d to delete individually partition untill all teh partition are deleted
+
+<<
+Command (m for help): d
+Selected partition 1
+>>
+
+#command p is used to check the current situation of the partition
+>>Command (m for help): p
+
+<<<
+
+Disk /dev/mmcblk0: 7948 MB, 7948206080 bytes
+4 heads, 16 sectors/track, 242560 cylinders, total 15523840 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00000000
+
+        Device Boot      Start         End      Blocks   Id  System
+
+>>>>
+
+# So all the partitions are deleted, if not again do d inteh cmd prompt of fdisk.
+#Now we can create a single new partition, the ‘n‘ command does this:
+# select p as primary
+# engter 1 to number as 1
+# Enter 
+#Enter
+
+
+<<<
+
+Command (m for help): n
+
+Partition type:
+   p   primary (0 primary, 0 extended, 4 free)
+   e   extended
+Select (default p): p
+
+Partition number (1-4, default 1): 1
+
+First sector (2048-15523839, default 2048): 
+Using default value 2048
+
+Last sector, +sectors or +size{K,M,G} (2048-15523839, default 15523839): 
+Using default value 15523839
+
+>>>
+
+#The above creates a primary partition, numbered 1, with the default start and end sector values. This creates a single partition over the entire SD card, #with a bit of space left – as required – at the start
+
+# use p to check the current situation
+
+#command t is used to convert file system LINUX to FAT
+
+#t
+#1 (because we only have partition number 1)
+# press L to see teh list
+# This guy in the link has choosen b, however it dosent work when You install software on card the Raspbian - it fails. 
+#. I choose W95 FAT (LBA) and it worked. Also, when i chose c the command:
+# < mkfs.vfat /dev/mmcblk0p1>  (used later in the tutorial) didnt work, so teh process failed. when i choose b - W95 FAT
+<<<<
+
+Command (m for help): t
+Selected partition 1
+Hex code (type L to list codes): l
+...
+...
+ b  W95 FAT32       51  OnTrack DM6 Aux 9f  BSD/OS          e4  SpeedStor      
+ c  W95 FAT32 (LBA) 52  CP/M            a0  IBM Thinkpad hi eb  BeOS fs        
+...
+...
+Hex code (type L to list codes): b
+Changed system type of partition 1 to b (W95 FAT32)
+>>>>
+
+
+# use p again to see teh current situation:
+
+#Command (m for help): p
+
+<<<<
+Command (m for help): p
+
+Disk /dev/mmcblk0: 7948 MB, 7948206080 bytes
+4 heads, 16 sectors/track, 242560 cylinders, total 15523840 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00000000
+
+        Device Boot      Start         End      Blocks   Id  System
+/dev/mmcblk0p1            2048    15523839     7760896    b  W95 FAT32
+>>>
+## see the system is changed from LINUX to FAT32
+
+# No wfinally we need to write it to the device with command 'w'
+
+<<<<
+
+Command (m for help): w
+The partition table has been altered!
+
+>>>
+
+#Now finally
+
+mkfs.vfat /dev/mmcblk0p1
+
+#To foramt  it finally. 
+
+#It can show:error:
+# Try to unmount the card and try again:
+#mkfs.vfat: unable to open /dev/mmcblk0p1: Device or resource busy
+
+sudo mkfs.vfat /dev/mmcblk0p1
+
+#Still failes
+#mkfs.fat 4.1 (2017-01-24)
+#mkfs.vfat: failed whilst writing FAT
+# Finally this worked after two days of pain:
+sudo mkfs.vfat -F 32 -n rpi2 /dev/mmcblk0p1
+#rpi is the name I have given to the partition and it will be flased to teh device when I will plug teh card in the notebook
+# however make sure teh devicve is unmounted before partitioning and when doing mkfs.vfat:
+umount /dev/mmcblk0
+##2nd RP didnt work. I did everything  - burned RasPian through windows, by partitioning it by FAT32 ion windows with this new software. But still cannot access teh RPi2. I think its some ssh issue. I need to get HDMI to Micro HDMI cable to to make it to moniter to get the ip address.
+ 
+
+#Strange when i choose 'b' during choosing FAT system mow it worked# and 
+
+#Now burn RPi on to sd card:
+#tomshardware.com/reviews/raspberry-pi-headless-setup-how-to,6028.html
+#Install Raspberry Pi OS previously known as Raspbian headless (meaning without keyboard, monitor and mouse input.):
+
+
+#1. Download and install  Raspberry Pi Imager or an easy way to install Raspberry Pi OS here:
+
+https://www.raspberrypi.org/downloads/
+# choose ubuntu
+# Now open 'imager' in the search window of ubuntu. Also, insert teh SD card you want to insytall into RaspberryPi OS into.
+#make it run varify etc. it will atke time.
+# once complete, No we want to make sshable
+# teh sd card will be turned as 'boot'. try to reinsert it as the need be if not turned so. 
+# in teh terminal go to boot and create a file called 'ssh':
+touch sshtomshardware.cotomshardware.com/reviews/raspberry-pi-headless-setup-how-to,6028.htmltomshardware.com/reviews/raspberry-pi-headless-setup-how-to,6028.htmlm/reviews/raspberry-pi-headless-setup-how-to,6028.html
+
+# I am trying to make teh internet run by WIFI but seems little complicated for now i am running by ethernet.
+# so insert ethernet cable in RPi and in your terminal do:
+ping raspberrypi.local
+ping raspberrypi
+
+# it will ping the RPi in connection with teh LAN and will throw the local IP. it may look like: <10.208.243.179>
+# https://www.raspberrypi.org/documentation/remote-access/ip-address.md
+# now:
+
+ssh yogi@10.208.243.179
+ssh pi@10.208.240.30
+# password is: raspberry
+# now i have ssh conenction. these are little commands through comand line. It differ little with ubuntu. 
+#https://www.circuitbasics.com/useful-raspberry-pi-commands/
+
+
+
+#Connecting through WIFi
+# now since I have Ip may be I can connect through wifi lets try.
+# I think, quite histerically, connection with Wifi worked as well.
+# So again we need the Ip address of Raspi, how we get it?
+# once again we do actually need teh ethernet cable fist to get the IP:
+# Once plugged in do:
+ping raspberrypi.local
+
+#This will generate the Ip address. Note it.
+
+#now we have already to do some file addition in the sd card, while we were burning the OS in card.
+#We need to add a file "wpa_supplicant.conf" in the root directory. and add:
+
+
+<<<<
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+country=«your_ISO-3166-1_two-letter_country_code»
+ 
+network={
+ssid="«your_SSID»"
+psk="«your_PSK»"
+key_mgmt=WPA-PSK
+}
+
+>>>>
+
+
+After adding all teh values it looks like this:
+
+#Country code  = CZ for czech republic and DE for Germany
+#ssid is the name of the network uceeb for my work network
+#psk is teh password fo rteh network
+
+
+<<<<
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+country=CZ
+ 
+network={
+ssid="uceeb"
+psk="bustehrad"
+key_mgmt=WPA-PSK
+}
+
+>>>>
+
+#So again we have sshable and WIFiabeble RPi. so we can do again:
+ssh pi@10.208.243.179
+#password: raspberry
+
+#To change the password:
+sudo raspi-config
+
+#chnage the password in this form
+
+
+#https://www.raspberrypi.org/forums/viewtopic.php?f=50&t=11870
+## Now we need to add users and home directory and passwords for that. 
+# however, befoe we can do it we need to set some sshing protocol in our ubuntu clint.
+# if we dont do it we will have Problem with locale. Locale is some dict in RPi containing teh information
+# like, language: GB, country: CZ, Tiem Zone = europe, Keyboard etc. 
+# if we dont commemnt it out we will be unable to set these value sin RPi through SSh (its only problem with SSHing - so headless setup)
+# so just do: in the ubuntu 
+
+nano /etc/ssh/ssh_config
+
+and comment out down below:
+
+#SendEnv LANG LC_*
+
+#save it and just re ssh to the RPi.
+
+#Do
+
+sudo raspi-config
+
+#select, languge option its 4th from top.
+# select berlin time, select keyboard english I think etc and exit it will saved now and done, otehrwise it will throw error (due to ssh client interfering).
+
+#Now add the users to add the home directory as well:
+
+sudo adduser yogi
+bittoo #password
+
+# add yogi as super user
+
+sudo adduser yogi sudo # this canonly bedone when I am in the pi as as pi@<IP> and not as yogi@<IP>
+
+# exit now to ssh again with yogi as super user
+
+exit 
+
+##########################################################
+ssh yogi@10.208.243.179###################################
+ssh  pi@10.208.240.30 # sometiemes its 10.208.240.129 #####
+
+############################
+##@@@@@@@@@@@@@@@@@@@@@@@@@@
+ssh yogi@10.208.8.122/16
+ssh yogi@nat44-72.uceeb.cvut.cz -p 64090
+ssh yogi@10.208.8.121/16
+ssh yogi@nat44-72.uceeb.cvut.cz -p 64089
+
+##@@@@@@@@@@@@@@@@@@@@@@@@@@
+#############################
+
+Message from vanek:
+OK
+After reboot, RPi obtain fix-IP 10.208.8.121/16 and 10.208.8.122/16
+external access to RPi (ssh port 22): nat44-72.uceeb.cvut.cz:64089 and nat44-72.uceeb.cvut.cz:64090
+
+f.v.
+###########################################################
+
+bittoo # password
+
+#ls dosent show the home directory
+cd /home # shows pi and yogi
+
+sudo apt update
+sudo update upgrade
+
+###install Conda!
+
+#to remove conda which is wrongly installed or installed in some other unwanted directory
+#rm -rf ~/miniconda3 # or rm -rf <Path/Miniconda/directory>
+
+#remove python if anything goes wrong:
+sudo apt-get remove python
+
+#2. Do 
+
+sudo apt-get install -y python-smbus  # To install anything I dont know but important to enable I2C dependencies 
+
+sudo apt-get install -y i2c-tools
+
+sudo raspi-config
+
+sudo reboot now
+
+sudo i2cdetect -y 1
+
+
+# Go to interface options -> Advanced (or to just I2C whicever visible) -> enable I2C -> Yes
+
+################################################################################################
+#3.  Install circuit python (Very important)###################################################
+################################################################################################
+
+#https://learn.adafruit.com/circuitpython-on-raspberrypi-linux/installing-circuitpython-on-raspberry-pi
+
+sudo apt-get update
+
+sudo apt-get upgrade
+
+sudo apt-get install python3-pip
+
+sudo pip3 install --upgrade setuptools
+
+#Enable I2C Its already been done in previous step
+
+#Enable SPI, its already been done in previosu step
+
+#Once you're done with both and have rebooted, verify you have the I2C and SPI devices with the command
+
+ls /dev/i2c* /dev/spi*
+
+#You should see the response
+
+#/dev/i2c-1 /dev/spidev0.0 /dev/spidev0.1
+
+pip3 install RPI.GPIO
+
+pip3 install adafruit-blinka
+
+#The computer will install a few different libraries such as adafruit-pureio (our ioctl-only i2c library), 
+#spidev (for SPI interfacing), Adafruit-GPIO (for detecting your board) and of course adafruit-blinka
+###############################################################################################################
+###############################################################################################################
+
+
+
+
+###############################################################################################################
+####4. Working with ADS115 ########
+###############################################################################################################
+#after connecting all the wires as given by thnis link:
+#https://learn.adafruit.com/raspberry-pi-analog-to-digital-converters/ads1015-slash-ads1115
+# Most recent non deprectaed circuit python library:
+#https://learn.adafruit.com/adafruit-4-channel-adc-breakouts/python-circuitpython
+
+pip3 install adafruit-circuitpython-ads1x15
+
+sudo pip3 install adafruit-circuitpython-ads1x15
+
+#######No Need##########################
+#mkdir py36 && cd project-name
+##python3 -m venv .env
+#source .env/bin/activate
+#pip3 install adafruit-circuitpython-ads1x15
+###########################################
+
+#if all  teh wiring are correct with ADS and Pi  llease double check, I checkd and the coltage across ADD and GND on the ADS was wrong some
+# 6mv because there was some problem in breadpoint at which I pointed the wires, changing the pointed wires changed the voltage to 3.3
+# and ADC was detected:
+
+sudo i2cdetect -y 1
+
+#It showed 48 which is the I2C interface with Pi. So there is some slave at 48 slot with Pi
+
+
+#Now I need to run this"
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+import time
+import board
+import busio
+import adafruit_ads1x15.ads1115 as ADS
+from adafruit_ads1x15.analog_in import AnalogIn
+
+# Create the I2C bus
+i2c = busio.I2C(board.SCL, board.SDA)
+
+# Create the ADC object using the I2C bus
+ads = ADS.ADS1115(i2c)
+
+# Create single-ended input on channel 0
+chan = AnalogIn(ads, ADS.P0)
+
+# Create differential input between channel 0 and 1
+#chan = AnalogIn(ads, ADS.P0, ADS.P1)
+
+print("{:>5}\t{:>5}".format('raw', 'v'))
+
+while True:
+    print("{:>5}\t{:>5.3f}".format(chan.value, chan.voltage))
+    time.sleep(0.5)
+
+
+#OR If I have 2 sensors (flow meter) I will update teh code to:
+ 
+import time
+import board
+import busio
+#import adafruit_ads1x15.ads1015 as ADS
+import adafruit_ads1x15.ads1115 as ADS
+from adafruit_ads1x15.analog_in import AnalogIn
+
+# Create the I2C bus
+i2c = busio.I2C(board.SCL, board.SDA)
+
+# Create the ADC object using the I2C bus
+ads = ADS.ADS1115(i2c)
+
+ads.gain = 1
+
+# Create single-ended input on channel 0
+#chan = AnalogIn(ads, ADS.P0, ADS.P1)
+chan1 = AnalogIn(ads, ADS.P0)
+chan2 = AnalogIn(ads, ADS.P1)
+#print (chan.value)
+#print (chan.voltage)
+#Create differential input between channel 0 and 1
+#chan = AnalogIn(ads, ADS.P0, ADS.P1)
+#print (chan.value, chan.voltage)
+#print("{:>5}\t{:>5}".format('raw', 'v'))
+
+while True:
+    print('flow HP:',"{:>5}\t{:>5.3f}".format(chan2.value, chan2.voltage), '\n\n')
+    print('flow load:',"{:>5}\t{:>5.3f}".format(chan1.value, chan1.voltage, '\n\n'))
+    print('________________________________________________________________')
+    #print("{:>5.3f}".format(chan.voltage))
+    time.sleep(0.5)
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+#It shows error that "OSErrro: [Errno 121] Remote I/O error"
+# Everything else works just "print("{:>5}\t{:>5.3f}".format(chan.value, chan.voltage))" 
+#Dosent work probably its because of the there is no Anolog singal on ADC, lets try to connect ADC with anolog signal of flow meter
+#Yes increasing with flow  dosent help too.
+#Ok problem solved: teh beradboard was half way disconnected by the supplier. So teh green and red line was discontunied
+# This is some special type of bread board which is half disconnected and I need to connect both part of the bread board with 
+# jumper wiring. in this was all the ground and -ve will be conencted together and teh circuit will be short.
+# lastly, even the current was showing on VDD and gnd probbably due to its internal powering through SDA and SCL.
+# So connect it through both teh parts and run the above code again and it will work.
+
+
+
+
+
+
+##############################################################################################################
+####NO Need to Install Conda waste of Time go without conda###################################################
+###############################################################################################################
+
+##############################
+##########Conda install:##
+##############################
+#https://gist.github.com/simoncos/a7ce35babeaf73f512be24135c0fbafb
+wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-armv7l.sh
+sudo md5sum Miniconda3-latest-Linux-armv7l.sh # (optional) check md5
+
+sudo /bin/bash Miniconda3-latest-Linux-armv7l.sh # -> change default directory to /home/yogi/miniconda3
+
+#change teh directory in teh command prompt to /home/yogi/miniconda3 because I wnat to install conda in Yogi user which I created  as in above section.
+
+sudo nano /home/yogi/.bashrc # -> add: 
+
+export PATH="/home/yogi/miniconda3/bin:$PATH"
+
+
+Conda
+
+
+
+#conda install python=3.6 dosent work what to do to install python > 3.4?
+#Add the Berryconda package manager by jjhelmus (kind of an up-to-date version of the armv7l version of Miniconda):
+conda config --add channels rpi
+
+conda create --name py36 python=3.6
+
+source activate py36
+
+#conda activate dosent work with RPi
+
+#conda install ipython dosent work
+# conda install jupyter dosennt work
+pip install ipython
+pip install notebook # for jupyter notebook
+pip install pandas
+# conda install pandas numpy # dosent work only pip seems to work
+# pip install numpy dosent seem to work. # conda is little trouble in RPi
+#every thing works
+
+
+#ShutDown Rpi before unplugging:
+sudo shutdown -a now
+
+# to restart jjust replug teh power cable wait for 2 minutes and ssh to it again.
+
+
+
+##Working with py virtual environment
+source py36/env/bin/activate
+
+# command to see the SPIs: # this is i2c devices to get to knwo which are conncted to the I2c bus. And it can show 48 because 48 is the
+# address of the device connected to teh i2c bus
+
+sudo i2cdetect -y 1
+
+#Works!! Remember to solder every teh connnection in MAX otherwise it wont work.
+# To display multiple tem values in RPi cerate file:
+
+nano 2sensors.py
+
+# Simple demo of the MAX31865 thermocouple amplifier.
+# Will print the temperature every second.
+
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+import time
+
+import board
+import busio
+import digitalio
+
+import adafruit_max31865
+
+
+# Initialize SPI bus and sensor.
+spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
+cs1 = digitalio.DigitalInOut(board.D4)  # Chip select of the MAX31865 board.
+cs2 = digitalio.DigitalInOut(board.D5)  # Chip select of the MAX31865 board.
+
+sensor1 = adafruit_max31865.MAX31865(spi, cs1,  wires=4)
+sensor2 = adafruit_max31865.MAX31865(spi, cs2,  wires=2)
+
+# Note you can optionally provide the thermocouple RTD nominal, the reference
+# resistance, and the number of wires for the sensor (2 the default, 3, or 4)
+# with keyword args:
+# sensor = adafruit_max31865.MAX31865(spi, cs, rtd_nominal=100, ref_resistor=430.0, wires=2)
+
+# Main loop to print the temperature every second.
+while True:
+    # Read temperature.
+
+    temp1 = sensor1.temperature
+    temp2 = sensor2.temperature
+
+    # Print the value.
+    print("Temperature sensor1: {0:0.3f}C".format(temp1))
+    print("Temperature sensor 2: {0:0.3f}C".format(temp2))
+    #print (type(temp1))
+    # Delay for a second.
+    time.sleep(1.0)
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+#Now run
+sudo python3 2sensors.py
+
+
+######
+#Install SQLite
+######
+#https://iot4beginners.com/sqlite-database-on-raspberry-pi/
+https://www.sqlitetutorial.net/sqlite-python/insert/
+sudo apt-get update
+sudo apt-get upgrade
+
+
+sudo apt-get install sqlite3
+
+mkdir TemperatureDB
+cd TemperatureDB
+
+#To connect the DB file 
+sqlite3 temperature.db
+
+CREATE TABLE temSensor(id INTEGER PRIMARY KEY AUTOINCREMENT, Temp1 NUMERIC,Temp2 NUMERIC, Date DATE, Time TIME);
+# When in table if want to see whats inside the table:
+
+SELECT * FROM temSensor;
+
+
+sqlite> .tables # to see tables in sqlite
+sqlite> .fullschema # To see full scheme how table looks liek
+sqlite> .exit 
+
+sqlite > PRAGMA table_info(temSensor); # to see teh columns name.
+
+
+
+######
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##mcp3008
+######
+
+https://www.raspberrypi-spy.co.uk/2014/08/enabling-the-spi-interface-on-the-raspberry-pi/
+
+#it says I need to install some library to communicate mcp3008 with RPi (look at teh end)
+

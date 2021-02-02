@@ -1,0 +1,37 @@
+RPi1:
+
+appDhtWebHistWithMySQL.py
+
+mainFileUsingMysql.py
+
+RPi2:
+
+#Main file which saves all teh data in a lol is:
+mysql2RPi1.py
+
+# this file saves data as a dict{a:1, b:2, c:3, ...} and also as dict{a: [1,2,3], b:{1,2,3}, c:{1,2,3},...} (so if I need dict for my calculations I
+# can use this file)
+allRpis2MqttClient.py
+
+# be wary run the mainFileUsingMysql.py file in the RP1 (122) before running allRpis2MqttClient.py or mysql2RPi1.py. because otherwise there will no
+# no data stored and teh same data will be repeated in RP1 clients
+
+#Regarding working with the web application:
+# The main filw now is: Its taking flow as well as all the temperature values
+sudo python3 flowAppMySQL.py
+#sometimes maximum samples would not take more than 60 numbers even though maximum number of rows is higher tham 400. In this case just restart the server:
+
+#sudo python3 appDhtWebHistWithMySQL.py
+
+# appDhtWebHistWithMySQL.py is the new file accomdating the Mysql rather than sqlite3.
+
+#In RPi1 main file is now: 
+
+sudo python3 mysql2RPi1.py
+
+# It remotly connects to Rpi1 and saves teh data in a lol, while there is no replication so  mysqlReplicatedServer.py is not usefuk which takes replication of DB
+
+# in Rpi1 mainFileUsingMysql.py is teh main file. So run it to save all teh pt100 data to Mysql
+
+sudo python3 mainFileUsingMysql.py 
+

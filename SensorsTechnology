@@ -1,0 +1,8 @@
+https://www.youtube.com/watch?v=qTLRRg6Mee0
+https://m.eet.com/media/1060300/FreescaleADC_018.pdf
+https://www.mccdaq.com/PDFs/specs/Analog-to-Digital.pdf
+I2C: master slave communication protocol. connects master with slave. has two busses. one is SCl (clock), it is bidirectional, from master to slave, 0 and 1 syncronously each unit time. other bus is SDA (serial data), bidirectional, originates from master to slave and wise versa. it shares data bidirectionally and serially 
+
+
+#How ads1115 works with RPi
+https://www.digikey.cz/en/maker/projects/raspberry-pi-analog-to-digital-converters/72388f5f1a0843418130f56c53a1276c#:~:text=The%20ADS1015%20and%20ADS1115%20are,bit%20ADC%20with%204%20channels.

@@ -1,0 +1,38 @@
+#How to open jupyter notebook in ssh in raspi":
+
+#https://www.youtube.com/watch?v=B_6Kdb2p5fs
+
+jupyter notebook --generate-config
+
+
+
+nano /home/yogi/.jupyter/jupyter_notebook_config.json
+
+#Take the password: argon2:$argon2id$v=19$m=10240,t=10,p=8$apIKRzBTAaaZl/XfKg7JVg$xdDwxwTUSH0cthWikJpySQ" on config.json 
+
+nano /home/yogi/.jupyter/jupyter_notebook_config.py
+
+##write pass in this file in here 
+
+c.NotebookApp.ip = '*'
+c.NotebookApp.port = 8889
+c.NotebookApp.password = u'argon2:$argon2id$v=19$m=10240,t=10,p=8$apIKRzBTAaaZl/XfKg7JVg$xdDwxwTUSH0cthWikJpySQ'
+c.Notebook.open_browser = False
+c.NotebookApp.allow_root= True
+
+
+jupyter notebook
+
+# Now go to browser and type <ip>:8889
+
+10.208.8.121:8889
+
+pass = 'bittoo'
+
+to work with root privalages otherwise it will through error that permission denied to i2c device:
+
+sudo -E env "PATH=$PATH" jupyter notebook
+
+# also to open Ipython with sudo access in Rpi2:
+
+sudo -E env "PATH=$PATH" ipython3

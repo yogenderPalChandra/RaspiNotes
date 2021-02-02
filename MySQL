@@ -1,0 +1,420 @@
+
+#https://www.guru99.com/python-mysql-example.html
+#https://www.thepythoncode.com/article/connect-to-a-remote-mysql-server-in-python
+#https://pimylifeup.com/raspberry-pi-mysql/
+https://www.cyberciti.biz/tips/how-do-i-enable-remote-access-to-mysql-database-server.html
+#sudo systemctl restart mysql <systemctl restart mysql>
+#https://www.hostinger.com/tutorials/mysql/how-to-grant-remote-access-mysql-vps
+#https://www.digitalocean.com/community/tutorials/how-to-allow-remote-access-to-mysql
+#https://phoenixnap.com/kb/mysql-remote-connection
+#https://howtoraspberrypi.com/enable-mysql-remote-connection-raspberry-pi/
+#https://pimylifeup.com/raspberry-pi-mysql/
+
+#https://www.digitalocean.com/community/tutorials/how-to-set-up-a-remote-database-to-optimize-site-performance-with-mysql-on-ubuntu-18-04
+sudo netstat -plunt | grep mysqld
+
+sudo mysql
+
+
+#How Do I Enable Remote Access To MySQL Database Server:
+
+########################
+#Install Mysql
+########################
+ssh yogi@10.208.8.122
+
+sudo apt update
+sudo apt upgrade
+
+
+sudo apt install mariadb-server
+
+# To set passwpords in mysql etc
+sudo mysql_secure_installation
+#Do Y
+#Now tyo access mysql:
+sudo mysql -u root -p
+#You will be prompted to enter the password that we just created in previous step 
+# Now you can enter commands to create sql database
+
+sudo mysql -u root -p
+
+CREATE DATABASE temperaturedb;
+##########################################################
+###How Do I Enable Remote Access To MySQL Database Server:
+##########################################################
+##ssh to the RP1, because i want to access Dtabase on RP1 from RP2. Because the local host -RP1 hosts the database (MySql) in the for, of web application I #built
+
+cd /etc/mysql
+cd mariadb.conf.d
+
+nano 50-server.cnf
+#Change like this:change bind address from 127.0.0.1 to 10.208.8.122. in [mysqld]
+# port 64090 is for teh external connections to teh uceeb network (I doubt if its correct)
+# Yes this port was incorrect. i must use classic mysql port 3306. 
+#The address you specify in bind tells MySQL where to listen. 0.0.0.0 is a special address, which means "bind to every available network".
+#Only client software which is able to open a connection to the server using the same address that is specified in the 'bind' option will be allowed to #connect.
+#If MySQL binds to 127.0.0.1, then only software on the same computer will be able to connect (because 127.0.0.1 is always the local computer).
+#If MySQL binds to 192.168.0.2 (and the server computer's IP address is 192.168.0.2 and it's on a /24 subnet), then any computers on the same subnet (anything #that starts with 192.168.0) will be able to connect.
+#If MySQL binds to 0.0.0.0, then any computer which is able to reach the server computer over the network will be able to connect.
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+user                    = mysql
+pid-file                = /run/mysqld/mysqld.pid
+socket                  = /run/mysqld/mysqld.sock
+port                    = 3306
+
+#port                    = 64090
+basedir                 = /usr
+datadir                 = /var/lib/mysql
+tmpdir                  = /tmp
+lc-messages-dir         = /usr/share/mysql
+#skip-external-locking
+
+# Instead of skip-networking the default is now to listen only on
+# localhost which is more compatible and is not less secure.
+#bind-address            = 127.0.0.1
+
+bind-address             = 10.208.8.122
+#require_secure_transport = on
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+# I put 0.0.0.0  or 10.208.8.122. if its 10.208.8.122, then change the localhost as <10.208.8.122> and user =<yogi> in 
+#the python client connector client
+#python connector client can look like:
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+db_connection = mysql.connector.connect(
+  host="10.208.8.122",
+  user="yogi",
+  passwd="bittoo"
+)
+print(db_connection)
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+#restart mariadb everytime I change the Ip connectivity 
+systemctl restart mysql
+
+#grant access, connect to mysql server
+sudo mysql -u root -p mysql
+
+###################################
+# Create DB to assiccible from RP2
+#################################
+
+CREATE DATABASE TemaccessToRemoteRp2;
+
+GRANT ALL ON TemaccessToRemoteRp2.* TO yogi@10.208.8.121 IDENTIFIED BY 'bittoo';
+
+FLUSH PRIVILEGES;
+exit;
+
+#Configure UFW – An Un-complicated FireWall in Debian/Ubuntu 
+sudo apt-get install ufw
+
+sudo ufw status
+#Status inactiavte:
+
+sudo ufw enable
+#active 
+sudo ufw allow from 10.208.8.121 to any port 3306
+#Rule added
+
+
+
+#########################################################################################
+##Problem with ufw on RP2 (where I installed it) is that it blocks ssh from other comuputers, so i needed to connect it through monitors etc
+## and disable it via:
+sudo ufw disable
+#########################################################################################
+
+#Connect from RPi2:
+mysql -u yogi -h 10.208.8.122 -p
+
+#Connected Cool
+
+#I can check the connected host (permited host in the RP1):
+sudo mysql -u root -p
+
+SELECT User, Host, plugin FROM mysql.user;
+
++-------------+--------------+-----------------------+
+| User        | Host         | plugin                |
++-------------+--------------+-----------------------+
+| root        | localhost    | mysql_native_password |
+| exampleuser | localhost    |                       |
+| Yogi        | 10.208.8.122 |                       |
+| yogi        | 10.208.8.122 |                       |
+| yogi        | 10.208.8.121 |                       |
++-------------+--------------+-----------------------+
+5 rows in set (0.001 sec)
+
+############################################################################################################
+### How to remotly access DB -allSensors table- flowReadings on RPi2 (10.208.8.121) from RPi2 (10.208.8.122)
+### Why we need to do it? To fetch flow data on the web server hosted on RP1.   
+#Allow access to RP2 (10.208.8.121) from RP1 (121) to the DB allSensos. allSensors is just flow reading DB
+# and not pt100 + current loop DB, the name was already given in the RPi2 script I have already given permission
+# on the Rp1 to acces it. So i decided to keep things simple and go as it is
+While on Rp2 (121):
+
+cd /etc/mysql/mariadb.conf.d
+nano 50-server.cnf
+
+#and add blind address to local host i.e. static  Ip of RPi2 which is: 10.208.8.121
+
+blind_address  = 10.208.8.121
+
+#Now when building connection in python client dont use host: localhost instead give the correct IP:
+
+db_connection = mysql.connector.connect(
+  host="10.208.8.121",
+  user="yogi",
+  passwd="bittoo"
+)
+print(db_connection)
+
+#restart mariadb everytime I change the Ip connectivity 
+systemctl restart mysql
+
+#grant access, connect to mysql server
+sudo mysql -u root -p mysql
+
+###################################
+# Create DB to assiccible from RP1
+#################################
+# ssh to the RP1 (122)
+
+# grant access to remote DB now"
+GRANT ALL ON allSensors.* TO yogi@10.208.8.121 IDENTIFIED BY 'bittoo';
+
+FLUSH PRIVILEGES;
+exit;
+#Done
+############################################################################################################
+###################################################################################
+##If we want to give prevalage to user = yogi (for example) with host  = local host
+###################################################################################
+
+sudo mysql -u root -p
+
+grant all privileges on *.* to yogi@localhost identified by 'bittoo' with grant option;
+
+#To connect from pythin we need python connectors: only this worked rest didnt work
+sudo apt-get install python3-mysql.connector
+
+#Where stays my db names temperatureflow: 
+#https://stackoverflow.com/questions/1795176/how-to-change-mysql-data-directory
+
+cd /var/lib/mysql
+
+#########################################################
+###Connection from RPi2 to RPi1##########################
+#########################################################
+#Install this dont knwo what it is, i will import MySQLdb from script
+#No there is no nee to install it I reinstalled mysql and there was no need to install it. It worked already
+sudo apt-get install -y python3-mysqldb
+
+
+#################################################################################
+#####SQL replication#############################################################
+#################################################################################
+
+#We need mySQL replication  method to replicate the DB server on RP2 to RP1 and then conenct this DB in RP1 via local host:
+#https://www.ghacks.net/2009/04/09/set-up-mysql-database-replication/
+#https://www.digitalocean.com/community/tutorials/how-to-set-up-master-slave-replication-in-mysql
+
+# None of the above links worked however, a little from both worked
+
+cd /etc/mysql/mariadb.conf.d
+nano 50-server.cnf #Something like this
+
+#uncomment this line
+
+skip-networking
+bind-address = 127.0.0.1 # I can still make 10.208.8.122 as this is the static Ip address of RP1
+
+add this:
+
+log-bin = /var/log/mysql/mysql-bin.log
+binlog-do-db=TemaccessToRemoteRp2
+server-id=1 
+
+#Where: add this to [mysqld] section
+
+systemctl restart mysql
+
+mysql -u root -p
+
+GRANT REPLICATION SLAVE ON *.* TO yogi@<IP of Rp2 = 10.208.8.121> IDENTIFIED BY 'bittoo';
+
+FLUSH PRIVILEGES;
+
+USE TemaccessToRemoteRp2; # In teh mysql console maybe, check it
+
+FLUSH TABLES WITH READ LOCK;
+
+SHOW MASTER STATUS;
+
+# it will show this: Note it down
+
+MariaDB [TemaccessToRemoteRp2]> SHOW MASTER STATUS;
++------------------+----------+----------------------+------------------+
+| File             | Position | Binlog_Do_DB         | Binlog_Ignore_DB |
++------------------+----------+----------------------+------------------+
+| mysql-bin.000001 |      644 | TemaccessToRemoteRp2 |                  |
++------------------+----------+----------------------+------------------+
+
++------------------+----------+----------------------+------------------+
+| File             | Position | Binlog_Do_DB         | Binlog_Ignore_DB |
++------------------+----------+----------------------+------------------+
+| mysql-bin.000002 |  5730956 | TemaccessToRemoteRp2 |                  |
++------------------+----------+----------------------+------------------+
+8917263
+#Move over to the machine that will serve as the slave. Rp2
+
+sudo mysql -u root -p
+CREATE DATABASE TemaccessToRemoteRp2;
+
+# now quite with C-D
+
+cd /etc/mysql/mariadb.conf.d
+nano 50-server.cnf #Something like this
+
+server-id               = 2
+relay-log               = /var/log/mysql/mysql-relay-bin.log
+log_bin                 = /var/log/mysql/mysql-bin.log
+binlog_do_db            = TemaccessToRemoteRp2
+
+sudo service mysql restart
+sudo mysql -u root -p
+
+#CHANGE MASTER TO MASTER_HOST='<host IP RP1 = 10.208.8.122, within braces >',MASTER_USER='yogi', MASTER_PASSWORD='bittoo', MASTER_LOG_FILE='mysql-bin.000001', #MASTER_LOG_POS=  644;
+
+CHANGE MASTER TO MASTER_HOST='10.208.8.122',MASTER_USER='yogi', MASTER_PASSWORD='bittoo', MASTER_LOG_FILE='mysql-bin.000002', MASTER_LOG_POS=  6176232;
+
+
+# 644 i teh position number from above which I wrote down, everytinhg is commas
+
+START SLAVE;
+SHOW SLAVE STATUS\G
+
+#this will show some information about whis is master who is slave
+#Done
+
+# now sonnect liak i do from withn  python
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+conn = db.connect(host="localhost",
+                     user="yogi",
+                     passwd="bittoo",
+                     db="TemaccessToRemoteRp2")
+c = conn.cursor()
+#print (conn)
+
+c.execute("SELECT * from temSensor")
+result = c.fetchall()
+for item in result:
+    print (item)
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+If it says assces denied to yogi localhost, I need to add yogi user as a localhost:
+
+mysql -u root -p
+
+grant all privileges on *.* to yogi@localhost identified by 'bittoo' with grant option;
+
+
+##to see columns:
+
+sudo mysql -u root -p
+
+USE TemaccessToRemoteRp2;
+
+SHOW COLUMNS FROM temSensor;
+
+
+
+##################################
+###Enabling federated Mysql server
+##################################
+#https://dba.stackexchange.com/questions/9139/how-to-add-federated-engine-after-installing-mysql
+sudo mysql -u root -p
+
+show engines;
+
+# it shows engines installed:
+
+MariaDB [(none)]> show engines;
++--------------------+---------+----------------------------------------------------------------------------------+--------------+------+------------+
+| Engine             | Support | Comment                                                                          | Transactions | XA   | Savepoints |
++--------------------+---------+----------------------------------------------------------------------------------+--------------+------+------------+
+| MRG_MyISAM         | YES     | Collection of identical MyISAM tables                                            | NO           | NO   | NO         |
+| CSV                | YES     | Stores tables as CSV files                                                       | NO           | NO   | NO         |
+| MEMORY             | YES     | Hash based, stored in memory, useful for temporary tables                        | NO           | NO   | NO         |
+| MyISAM             | YES     | Non-transactional engine with good performance and small data footprint          | NO           | NO   | NO         |
+| Aria               | YES     | Crash-safe tables with MyISAM heritage                                           | NO           | NO   | NO         |
+| InnoDB             | DEFAULT | Supports transactions, row-level locking, foreign keys and encryption for tables | YES          | YES  | YES        |
+| PERFORMANCE_SCHEMA | YES     | Performance Schema                                                               | NO           | NO   | NO         |
+| SEQUENCE           | YES     | Generated tables filled with sequential values                                   | YES          | NO   | YES        |
++--------------------+---------+----------------------------------------------------------------------------------+--------------+------+------------+
+8 rows in set (0.001 sec)
+
+
+# There is no federated we need to install it. Do this in the MySQL console:
+
+install plugin federated soname 'ha_federated.so'
+
+show engines;
+
+
+MariaDB [(none)]> show engines;
++--------------------+---------+----------------------------------------------------------------------------------+--------------+------+------------+
+| Engine             | Support | Comment                                                                          | Transactions | XA   | Savepoints |
++--------------------+---------+----------------------------------------------------------------------------------+--------------+------+------------+
+| MRG_MyISAM         | YES     | Collection of identical MyISAM tables                                            | NO           | NO   | NO         |
+| CSV                | YES     | Stores tables as CSV files                                                       | NO           | NO   | NO         |
+| MEMORY             | YES     | Hash based, stored in memory, useful for temporary tables                        | NO           | NO   | NO         |
+| MyISAM             | YES     | Non-transactional engine with good performance and small data footprint          | NO           | NO   | NO         |
+| Aria               | YES     | Crash-safe tables with MyISAM heritage                                           | NO           | NO   | NO         |
+| InnoDB             | DEFAULT | Supports transactions, row-level locking, foreign keys and encryption for tables | YES          | YES  | YES        |
+| FEDERATED          | YES     | Allows to access tables on other MariaDB servers                                 | NO           | NO   | NO         |
+| SEQUENCE           | YES     | Generated tables filled with sequential values                                   | YES          | NO   | YES        |
+| PERFORMANCE_SCHEMA | YES     | Performance Schema                                                               | NO           | NO   | NO         |
++--------------------+---------+----------------------------------------------------------------------------------+--------------+------+------------+
+9 rows in set (0.001 sec)
+
+# installed federated now. WE nened to add this in the 50-server.cnf file too:
+
+nano /etc/mysql/mariadb.conf.d/50-server.cnf
+
+
+[mysqld]
+federated
+
+
+systemctl restart mysql
+
+#Done
+
+
+
+
+
+
+
+
+
+
+CREATE USER yogi@10.208.8.122 IDENTIFIED BY 'bittoo';
+
+GRANT CREATE, ALTER, DROP, INSERT, UPDATE, DELETE, SELECT, REFERENCES, RELOAD on *.* TO yogi@10.208.8.122 WITH GRANT OPTION;
+
+
+# creating python scripts  - connect store sensro data in mysql 
+pip3 install mysql-connector 
+
+#In RPi2 Do
+pip3 install mysql-connector-python

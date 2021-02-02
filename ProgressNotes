@@ -1,0 +1,75 @@
+Board dynamics:
+https://www.youtube.com/watch?v=vAS5iPS84RA
+on bread board, power supply strips + and - are there we will power the board through them
+
+# turn off the RPi before bread boarding it
+# use a resistor with RPi to not to short it
+# -ve is voltage +ve  is ground? https://www.youtube.com/watch?v=6Hau75Zkpj4 
+# no +ve is voltage and comes from the power 5v0 of the GPIO pinof the RPi.
+# so -ve on breadboard is ground and is connected to GND of RPi GPIO
+
+# How tyo install circuit python? for which module:
+https://circuitpython.org/downloads
+
+#https://www.youtube.com/watch?v=HkQQK1pd1Hk
+#This youtube video says i have already installed circuitPythin in RPi by following this link
+#https://learn.adafruit.com/circuitpython-on-raspberrypi-linux/installing-circuitpython-on-raspberry-pi
+
+#now probablhy i need to install circuitPython Libraries:  
+
+https://learn.adafruit.com/welcome-to-circuitpython/circuitpython-libraries
+
+#on this link: https://learn.adafruit.com/circuitpython-on-raspberrypi-linux/circuitpython-raspi
+
+# its one link on the middle left which says: Installing CircuitPython Libraries on Raspberry Pi and open to this link:
+#https://learn.adafruit.com/circuitpython-on-raspberrypi-linux/installing-circuitpython-on-raspberry-pi
+# this tutorial I already did
+# So I think circuit pyrthon libraries are altready installed. 
+
+#through this link I think its time to connect teh Max on board with RPi tehn do this python3 delete.py and it will import adafruit MAX...
+#https://learn.adafruit.com/circuitpython-on-raspberrypi-linux/i2c-sensors-and-devices
+
+
+#May be I need to install CircuitPython after connection. as its said in the https://www.mouser.com/datasheet/2/737/adafruit-max31865-rtd-pt100-amplifier-1396508.pdf
+#This guy has teh same isuue but on differnet board. 
+https://github.com/adafruit/Adafruit_CircuitPython_DRV2605/issues/7
+#meanwhile when i do sudo python delete.py its says no module named board and whine I do sudo python3 delete.py it says no module named adfruit_max.
+#seems like I have installed incorrect bundel or something. But I didnt install any bundels. Probably I nee dto install this adafruit_max.mpy too
+#lets see
+
+
+/lib/CIRCUITPY
+
+temSensor(id INTEGER, Temperature NUMERIC, Date DATE, Time TIME)
+
+
+####
+##MCP30008
+####
+https://www.youtube.com/watch?v=QHlWV904jNw
+https://www.raspberrypi-spy.co.uk/2013/10/analogue-sensors-on-the-raspberry-pi-using-an-mcp3008/
+https://learn.adafruit.com/mcp3008-spi-adc/python-circuitpython
+https://cdn-shop.adafruit.com/datasheets/MCP3008.pdf
+https://electronicshobbyists.com/raspberry-pi-analog-sensing-mcp3008-raspberry-pi-interfacing/
+https://learn.adafruit.com/raspberry-pi-analog-to-digital-converters/mcp3008
+
+
+#attention: sometimes its quite common to get error values of 743 or something on teh sensor on teh windows, or multiple sensors shows these noice or error values. Al I need to do is to just  sudo reboot and try to run teh files again to make all teh values are fine. YEs after reboot all teh values ar styoring well in sqlite3
+
+# Quite strange when i connect RPi2 voltage to the ADC (positive to positive in breadboard, negative to negative in breadboard),  all teh values are erronous. So porbably I need another power supply. to charge teh ADC. 
+
+# ironically enough when i connect only +ive to teh positive of of ADC (+ve of RPi2 to + of ADC breadboard and -ve of RPi1 to _ve of ADC breadboard) probably all of the system is on the same potential corrosponding to common ground  -ve 
+
+# probably this ADC is effecting the PT100. whcn I dont run ADC file in ubuntu (sudo python3 test.py) al the pt100 values are ok. The moment teh run test.py all teh values of pt100 are 743 or something.
+# i think yes teh momemnt i didnt run this ADC pt100 shows quite normal values. probably I need anotehr RPi for ADC. Some values are -242 though, but its not the connection with ADC error which I get 743. oh yes all te value are noraml without test.py file working. I need to connect ADC on different RPi. Sometimes it normally shows -242 in some of the pt100 but its nrmal error conencted with teh connections
+#I need to store these values in other RPI and other db, and club these values somehow
+
+
+
+
+#####sharing DB:
+
+https://stackoverflow.com/questions/7553700/importerror-no-module-named-paramiko
+
+
+
