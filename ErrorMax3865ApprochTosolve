@@ -1,0 +1,17 @@
+Errors in the sensros measurements in the motherboard:
+
+Very important:
+!!!<DO not removce anywire before checking voltage against gnd of the manfunctioning max318675 sensor!!!>
+
+242.04: this most likely means, connection is not established
+rectify:
+
+1. try to unplug and replug the Cs of the concerned Max31865 chip.
+2. what happened this time is i just tried to remve the whole max 31865 chip from breadboard (just hilaya left right and everything worked)
+3. sometimes when I measure voltage accross the max, vin and gnd it start to show up? dont knwo why
+
+so try to measure voltage, and everything would work, manytimes no body touched these circuits so why th eiwre would be displaced?
+
+so try to just measure the voltage across vin and gnd of max and everything would work
+
+and most importantly keep calm and relax, worl is not going to end on you, it workd this time too, it had worked last time too (a month or so ago) and it will work again

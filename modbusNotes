@@ -1,0 +1,23 @@
+WE need com port number whih is provided with teh device already.for example com2 Or com4 
+#https://stackoverflow.com/questions/59193279/how-to-implement-modbus-on-raspberry-pi
+
+#pip3 install pymodbus
+sudo pip3 install pyModbusTCP # sudo is important, otherwise teh wcript will nmot run with sudo. and its imp to run the script with sudo
+
+
+https://www.csimn.com/CSI_pages/Modbus101.html
+#Modbus slave devices can be visualized as having an internal spread sheet filled with numbers. 
+
+#The "columns" in a Modbus device's "spread sheet" are more formally known as register types. 
+#Register type may be a coil, a discrete input (aka #status input), an input register, or a holding register.
+
+#The "rows" in a Modbus device's "spread sheet" are simply the register number. 
+#Most often, these start at 1 and count up sequentially. Some devices might not have a register 1, and their first register may be number 100 for #example.
+
+
+#Check in the register/ or in the windows program of the wattmeter that the other power consumed by the other two non main
+#phases can be the power consumed by teh circulatng pump. If it is then, We can mention that toatal Power
+#consumption is actually leading to COP. Because, Total Power  = Power compressor + power Circulating.
+#And one of the phase might be used by circulating pump. check it that power is also rising in other non  main phases. Eg p2 and p3
+
+# cop = hourly or each second or each half second, or what? may be just save the data each half second 
